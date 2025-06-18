@@ -12,9 +12,51 @@
 			<h3 id="chat-header">Currently you are in chat: general</h3>
 			<form id="chatroom-selection"action="">
 				<label for="chatroom">Chatroom:</label>
-				<input type="text" id="chatroom name="chatroom"/>
+				<input type="text" id="chatroom" name="chatroom"/>
 				<input type="submit" value="Change chatroom" >
 			</form>
+
+			<textarea class="messagearea" readonly id="chatmessages" name="chatmessages" rows="5" cols="10" placeholder="Welcome!"></textarea>
+			<form id="chatroom-message">
+				<label for="message">Message:</label>
+				<input type="text" name="message" id="message">
+				<input type="submit" value="Send message">
+			</form>
 	</div>	
+	<script>
+		var selectedChat = "general"
+
+		function changeChatRoom(){
+			var newChat = document.getElementById("chatroom")
+			if(newChat != null && newChat.value != selectedChat){
+				console.log(newChat)
+
+			}
+			return false;
+		}
+
+
+		function sendMessage(){
+				var newMessage = document.getElementById("message")
+			if(newMessage != null ){
+				console.log(newMessage)
+
+			}
+			return false;
+
+		}
+
+		window.onload = function() {
+			document.getElementById("chatroom-selection").onsubmit = changeChatRoom
+			document.getElementById("chatroom-message").onsubmit = sendMessage
+
+			if(window["WebSocket"]){
+				console.log("connect to websocket")
+				new WebSocket("ws://" + document.location.host + "/ws")
+			}else{
+				alert("the browser does not support WebSocket")
+			}
+		}
+		</script>
 </body>
 </html>
