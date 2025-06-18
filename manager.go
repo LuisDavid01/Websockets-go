@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -18,15 +20,41 @@ var (
 type Manager struct {
 	clients ClientList
 	sync.RWMutex
+	handlers map[string]EventHandler
 }
 
 func NewManager() *Manager {
-	return &Manager{
-		clients: make(ClientList),
+	m := &Manager{
+		clients:  make(ClientList),
+		handlers: make(map[string]EventHandler),
+	}
+
+	m.setupEventHandlers()
+	return m
+}
+
+func (m *Manager) setupEventHandlers() {
+
+	m.handlers[EventSendMessage] = SendMessage
+}
+
+func SendMessage(event Event, c *Client) error {
+	fmt.Println(event)
+	return nil
+}
+
+func (m *Manager) routeEvent(event Event, c *Client) error {
+	if handler, ok := m.handlers[event.Type]; ok {
+		if err := handler(event, c); err != nil {
+			return err
+		}
+		return nil
+	} else {
+		return errors.New("The is nos such event")
 	}
 }
 
-func (M *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 	log.Println("i have a new connection")
 	//upgrade http to ws
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
@@ -35,25 +63,25 @@ func (M *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := NewClient(conn, M)
-	M.addClient(client)
+	client := NewClient(conn, m)
+	m.addClient(client)
 
 	go client.readMessages()
 	go client.writeMessages()
 
 }
 
-func (M *Manager) addClient(client *Client) {
-	M.Lock()
-	defer M.Unlock()
-	M.clients[client] = true
+func (m *Manager) addClient(client *Client) {
+	m.Lock()
+	defer m.Unlock()
+	m.clients[client] = true
 }
 
-func (M *Manager) removeClient(client *Client) {
-	M.Lock()
-	defer M.Unlock()
-	if _, ok := M.clients[client]; ok {
+func (m *Manager) removeClient(client *Client) {
+	m.Lock()
+	defer m.Unlock()
+	if _, ok := m.clients[client]; ok {
 		client.connection.Close()
-		delete(M.clients, client)
+		delete(m.clients, client)
 	}
 }
