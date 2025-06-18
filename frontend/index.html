@@ -10,6 +10,7 @@
 	<div>
 			<h1>Live chat with GO</h1>
 			<h3 id="chat-header">Currently you are in chat: general</h3>
+			<h3 id="connection-header">Connected to websocket: false</h3>
 			<form id="chatroom-selection"action="">
 				<label for="chatroom">Chatroom:</label>
 				<input type="text" id="chatroom" name="chatroom"/>
@@ -22,6 +23,18 @@
 				<input type="text" name="message" id="message">
 				<input type="submit" value="Send message">
 			</form>
+
+			<div>
+				<form id="login-form">
+					<label for="username">Username</label>
+					<input type="text" id="username" name="username"/>
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" />
+					<input type="submit" value="Login"/>
+
+				 
+				</form>
+			</div>
 	</div>	
 	<script>
 		var selectedChat = "general"
@@ -72,14 +85,41 @@
 			return false;
 
 		}
+		function login(){
+			let formData = {
+				"username": document.getElementById("username").value,
+				"password": document.getElementById("password").value,
+			}
 
-		window.onload = function() {
-			document.getElementById("chatroom-selection").onsubmit = changeChatRoom
-			document.getElementById("chatroom-message").onsubmit = sendMessage
+			fetch("login", {
+				method: 'post',
+				body: JSON.stringify(formData),
+				mode:'cors'
+			}).then((response) => {
+					if (response.ok){
+						return response.json()
+					}else{
+						throw 'unauthorized'
+					}
+				}).then((data) => {
+					connectWebsocket(data.otp);
+				}).catch((e) => {alert(e)})
+			return false
+		}
 
+		function connectWebsocket(otp){
 			if(window["WebSocket"]){
 				console.log("connect to websocket")
-				conn = new WebSocket("ws://" + document.location.host + "/ws")
+				conn = new WebSocket(`ws://${document.location.host}/ws?otp=${otp}`)
+				conn.onopen = function (evt){
+				document.getElementById("connection-header").innerHTML = "Connected!"				
+				}
+				conn.onopen = function (evt){
+					document.getElementById("connection-header").innetHTML = "Disconnected..."
+					// reconnection
+
+				}
+
 				conn.onmessage = function(evt) {
 					const eventData = JSON.parse(evt.data)
 					const event = Object.assign(new Event, eventData)
@@ -89,7 +129,14 @@
 			}else{
 				alert("the browser does not support WebSocket")
 			}
+
 		}
+
+		window.onload = function() {
+			document.getElementById("chatroom-selection").onsubmit = changeChatRoom
+			document.getElementById("chatroom-message").onsubmit = sendMessage
+			document.getElementById("login-form").onsubmit = login
+					}
 		</script>
 </body>
 </html>

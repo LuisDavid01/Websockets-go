@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 )
 
 func main() {
-	manager := NewManager()
+
+	ctx := context.Background()
+
+	manager := NewManager(ctx)
 
 	http.Handle(("/"), http.FileServer(http.Dir("./frontend")))
 	http.HandleFunc("/ws", manager.ServeWS)
+	http.HandleFunc("/login", manager.loginHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
