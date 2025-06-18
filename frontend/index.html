@@ -39,7 +39,7 @@
 		function sendMessage(){
 				var newMessage = document.getElementById("message")
 			if(newMessage != null ){
-				console.log(newMessage)
+				conn.send(newMessage.value);
 
 			}
 			return false;
@@ -52,7 +52,7 @@
 
 			if(window["WebSocket"]){
 				console.log("connect to websocket")
-				new WebSocket("ws://" + document.location.host + "/ws")
+				conn = new WebSocket("ws://" + document.location.host + "/ws")
 			}else{
 				alert("the browser does not support WebSocket")
 			}
