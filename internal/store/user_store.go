@@ -44,7 +44,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Rol       string    `json:"rol"`
-	Password  password  `json:"password"`
+	Password  password  `json:"_"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

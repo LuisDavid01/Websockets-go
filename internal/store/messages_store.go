@@ -16,9 +16,9 @@ type Messages struct {
 }
 
 type IMessage interface {
-	ReadChat(rID, pID uint8)
-	SendMessage(rID, PID uint8)
-	BlockChat(chatID uint8)
-	TransferChat(rID, chatID uint8)
-	DownloadChat(chatID uint8)
+	ReadChat(rID, pID uint8) (*Chat, error)
+	SendMessage(rID, PID uint8) error
+	BlockChat(chatID uint8) error
+	TransferChat(rID, chatID uint8) error
+	DownloadChat(chatID uint8) ([]byte, error)
 }
