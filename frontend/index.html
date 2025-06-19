@@ -6,37 +6,95 @@
 	<title>Chat en vivo con GO</title>
 	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
-	<div>
-			<h1>Live chat with GO</h1>
-			<h3 id="chat-header">Currently you are in chat: general</h3>
-			<h3 id="connection-header">Connected to websocket: false</h3>
-			<form id="chatroom-selection"action="">
-				<label for="chatroom">Chatroom:</label>
-				<input type="text" id="chatroom" name="chatroom"/>
-				<input type="submit" value="Change chatroom" >
-			</form>
+<body class="bg-gray-100 h-screen overflow-hidden">
+	<div class="flex h-screen">
+		<!-- Sidebar -->
+		<div class="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col">
+			<!-- Header -->
+			<div class="bg-green-600 text-white p-4">
+				<h1 class="text-lg font-semibold">Live chat with GO</h1>
+				<div class="text-sm opacity-90 mt-1">
+					<h3 id="connection-header">Connected to websocket: false</h3>
+				</div>
+			</div>
 
-			<textarea class="messagearea" readonly id="chatmessages" name="chatmessages" rows="5" cols="10" placeholder="Welcome!"></textarea>
-			<form id="chatroom-message">
-				<label for="message">Message:</label>
-				<input type="text" name="message" id="message">
-				<input type="submit" value="Send message">
-			</form>
-
-			<div>
-				<form id="login-form">
-					<label for="username">Username</label>
-					<input type="text" id="username" name="username"/>
-					<label for="password">Password</label>
-					<input type="password" id="password" name="password" />
-					<input type="submit" value="Login"/>
-
-				 
+			<!-- Login Section -->
+			<div class="p-4 bg-yellow-50 border-b border-gray-200">
+				<div class="text-sm text-gray-600 mb-3">Login</div>
+				<form id="login-form" class="space-y-3">
+					<div>
+						<label for="username" class="block text-xs text-gray-600 mb-1">Username</label>
+						<input type="text" id="username" name="username"
+							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-sm"/>
+					</div>
+					<div>
+						<label for="password" class="block text-xs text-gray-600 mb-1">Password</label>
+						<input type="password" id="password" name="password"
+							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-sm"/>
+					</div>
+					<input type="submit" value="Login" 
+						class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors cursor-pointer text-sm"/>
 				</form>
 			</div>
-	</div>	
-	<script>
+
+			<!-- Chat Room Selection -->
+			<div class="p-4 border-b border-gray-200">
+				<form id="chatroom-selection" class="space-y-3">
+					<div>
+						<label for="chatroom" class="block text-xs text-gray-600 mb-1">Chatroom:</label>
+						<input type="text" id="chatroom" name="chatroom"
+							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-sm"/>
+					</div>
+					<input type="submit" value="Change chatroom" 
+						class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors cursor-pointer text-sm"/>
+				</form>
+			</div>
+
+			<!-- Current Room Info -->
+			<div class="p-4 flex-1">
+				<div class="bg-green-50 rounded-lg p-3">
+					<h3 id="chat-header" class="text-sm text-green-600">Currently you are in chat: general</h3>
+				</div>
+			</div>
+		</div>
+
+		<!-- Chat Area -->
+		<div class="flex-1 flex flex-col bg-gray-50">
+			<!-- Chat Header -->
+			<div class="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
+						#
+					</div>
+					<div>
+						<div class="font-medium text-gray-800">Chat Messages</div>
+						<div class="text-sm text-gray-500">Live conversation</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Messages Area -->
+			<div class="flex-1 p-4">
+				<textarea class="messagearea w-full h-full p-4 border border-gray-300 rounded-lg bg-white focus:outline-none focus:border-green-500 resize-none font-mono text-sm" 
+					readonly id="chatmessages" name="chatmessages" rows="5" cols="10" placeholder="Welcome!"></textarea>
+			</div>
+
+			<!-- Message Input -->
+			<div class="bg-white border-t border-gray-200 p-4">
+				<form id="chatroom-message" class="flex gap-3 items-end">
+					<div class="flex-1">
+						<label for="message" class="block text-xs text-gray-600 mb-1">Message:</label>
+						<input type="text" name="message" id="message"
+							class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-green-500 bg-gray-50"/>
+					</div>
+					<input type="submit" value="Send message" 
+						class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-full transition-colors cursor-pointer whitespace-nowrap"/>
+				</form>
+			</div>
+		</div>
+	</div>
+
+<script>
 		var selectedChat = "general"
 
 		class Event {
@@ -46,6 +104,45 @@
 			}
 		}
 
+		class SendMessageEvent{
+			constructor(message,from){
+				this.message = message
+				this.from = from
+			}
+		}
+		class NewMessageEvent{
+			constructor(message,from, sent){
+				this.message = message
+				this.from = from
+				this.sent = sent
+			}
+		}
+
+		class ChangeChatRoomEvent{
+			constructor(name){
+				this.name = name
+			}
+
+		}
+
+		function changeChatRoom(){
+			var newChat = document.getElementById("chatroom")
+			if (newChat !== null || newChat.value != selectedChat){
+				selectedChat = newChat.value
+				console.log(selectedChat)
+				header = document.getElementById("chat-header").innerHTML = `Currently you are in chat: ${newChat.value}`
+				let changeEvent = new ChangeChatRoomEvent(selectedChat)
+
+				sendEvent("change_room", changeEvent)
+				textarea = document.getElementById('chatmessages')
+				textarea.innerHTML = `You change chatroom to ${selectedChat}`
+				
+
+			}
+			return false
+		}
+
+
 		function routeEvent(event){
 			if (event.type === undefined){
 				alert('No field type')
@@ -53,7 +150,9 @@
 
 			switch(event.type){
 				case "new_message":
-				console.log("new message")
+				const messageEvent = Object.assign(new NewMessageEvent, event.payload)
+				appendChatMessage(messageEvent)
+
 				break;
 				default:
 				alert("unsupported event type")
@@ -61,25 +160,26 @@
 			}
 		}
 
+		function appendChatMessage(messageEvent){
+			var date = new Date(messageEvent.sent);
+			const formattedMsg = `${date.toLocaleString()}: ${messageEvent.message}`
+
+			textarea = document.getElementById('chatmessages')
+			textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg
+			textarea.scrollTop = textarea.scrollHeight
+		}
+
 		function sendEvent(eventName, payload){
+			console.log("Event " + eventName, + "\npayload: " + payload)
 			const event = new Event(eventName, payload)
 			conn.send(JSON.stringify(event))
 		}
 
-		function changeChatRoom(){
-			var newChat = document.getElementById("chatroom")
-			if(newChat != null && newChat.value != selectedChat){
-				console.log(newChat)
-
-			}
-			return false;
-		}
-
-
 		function sendMessage(){
 				var newMessage = document.getElementById("message")
 			if(newMessage != null ){
-				sendEvent("send_message", newMessage.value )
+				let outgoinEvent = new SendMessageEvent(newMessage.value, "percy")
+				sendEvent("send_message", outgoinEvent )
 
 			}
 			return false;
@@ -114,13 +214,14 @@
 				conn.onopen = function (evt){
 				document.getElementById("connection-header").innerHTML = "Connected!"				
 				}
-				conn.onopen = function (evt){
-					document.getElementById("connection-header").innetHTML = "Disconnected..."
+				conn.onclose = function (evt){
+					document.getElementById("connection-header").innerHTML = "Disconnected..."
 					// reconnection
 
 				}
 
 				conn.onmessage = function(evt) {
+					console.log(evt)
 					const eventData = JSON.parse(evt.data)
 					const event = Object.assign(new Event, eventData)
 

@@ -16,5 +16,5 @@ func main() {
 	http.HandleFunc("/ws", manager.ServeWS)
 	http.HandleFunc("/login", manager.loginHandler)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServeTLS(":8080", "server.crt", "server.key", nil))
 }
