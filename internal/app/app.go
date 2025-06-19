@@ -10,6 +10,7 @@ import (
 
 	"github.com/LuisDavid01/Websockets-go/internal/manager"
 	"github.com/LuisDavid01/Websockets-go/internal/store"
+	"github.com/LuisDavid01/Websockets-go/migrations"
 )
 
 type Application struct {
@@ -31,6 +32,11 @@ func NewApplication() (*Application, error) {
 	}
 
 	//do migrations
+
+	err = store.MigrateFS(pgDb, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 
 	//we construct the application
 	app := &Application{
