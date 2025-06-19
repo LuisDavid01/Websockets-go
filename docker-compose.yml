@@ -1,0 +1,27 @@
+services:
+  go-chat:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    networks:
+        - dev-test
+    environment:
+      - POSTGRES_URL=${POSTGRES_URL}
+
+  db:
+    container_name: "db-Chat"
+    image: postgres:12.4-alpine
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./database/postgres-data:/var/lib/postgresql/data:rw"
+    restart: unless-stopped
+networks:
+  dev-test:
+    driver: bridge
+
