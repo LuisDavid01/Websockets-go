@@ -1,8 +1,10 @@
-package main
+package event
 
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/LuisDavid01/Websockets-go/internal/types"
 )
 
 type Event struct {
@@ -10,7 +12,7 @@ type Event struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-type EventHandler func(event Event, c *Client) error
+type EventHandler func(event Event, c *types.Client) error
 
 const (
 	EventSendMessage = "send_message"

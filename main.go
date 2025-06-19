@@ -1,20 +1,30 @@
 package main
 
 import (
-	"context"
+	//"context"
+	//"github.com/LuisDavid01/Websockets-go/internal/manager"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/LuisDavid01/Websockets-go/internal/app"
+	"github.com/LuisDavid01/Websockets-go/internal/routes"
 )
 
 func main() {
+	app, err := app.NewApplication()
+	if err != nil {
+		panic(err)
+	}
+	r := routes.SetupRoutes(app)
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		IdleTimeout:  5 * time.Minute,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	app.Logger.Println("the server started successfuly!:" + "https://localhost:8080/")
 
-	ctx := context.Background()
-
-	manager := NewManager(ctx)
-
-	http.Handle(("/"), http.FileServer(http.Dir("./frontend")))
-	http.HandleFunc("/ws", manager.ServeWS)
-	http.HandleFunc("/login", manager.loginHandler)
-
-	log.Fatal(http.ListenAndServeTLS(":8080", "server.crt", "server.key", nil))
+	log.Fatal(server.ListenAndServeTLS("server.crt", "server.key"))
 }

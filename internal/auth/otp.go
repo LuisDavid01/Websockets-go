@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func (rm RetentionMap) NewOTP() OTP {
 	return o
 }
 
-func (rm RetentionMap) verifyOTP(otp string) bool {
+func (rm RetentionMap) VerifyOTP(otp string) bool {
 	if _, ok := rm[otp]; !ok {
 		return false
 	}
