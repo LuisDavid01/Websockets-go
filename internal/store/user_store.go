@@ -40,10 +40,10 @@ func (p *password) Matches(plainText string) (bool, error) {
 }
 
 type User struct {
-	ID        uint8     `json:"id"`
+	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Rol       string    `json:"rol"`
+	Rol       string    `json:"-"`
 	Password  password  `json:"_"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -52,8 +52,8 @@ type User struct {
 // set a default anonimous user to compare to
 var AnonUser = &User{}
 
-func isAnon(u *User) bool {
-	return u == AnonUser
+func isAnon(user *User) bool {
+	return user == AnonUser
 }
 
 type dbConn struct {
@@ -66,9 +66,111 @@ func NewDBConn(db *sql.DB) *dbConn {
 
 // interface implement this later
 type IUser interface {
-	CreateUser(user *User) error
-	GetUserById(username string) (*User, error)
-	GetUserByUsername(id uint8) (*User, error)
-	UpdateUser(*User) error
+	RegisterUser(user *User) error
+	GetUserByUsername(username string) (*User, error)
+	GetUserById(id int64) (*User, error)
+	UpdateUser(user *User) error
 	GetUserToken(scope, tokenPlainText string) (*User, error)
+}
+
+func (pg *dbConn) RegisterUser(user *User) error {
+	query := ` INSERT INTO 
+	users(username, email, rol, password)
+	VALUES($1,$2,$3,$4)
+	`
+	err := pg.db.QueryRow(query, user.Username, user.Email, user.Rol, user.Password.hash).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (pg *dbConn) GetUserById(id int64) (*User, error) {
+
+	user := User{
+		Password: password{},
+	}
+	query := `SELECT id, username, password, email, "user", created_at, updated_at
+	FROM users
+	WHERE id = $1
+	`
+
+	err := pg.db.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password.hash,
+		&user.Email,
+		&user.Rol,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	//not found
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	// oops
+	if err != nil {
+		return nil, err
+	}
+	//we found the user
+	return &user, nil
+}
+
+func (pg *dbConn) GetUserByUsername(username string) (*User, error) {
+
+	user := User{
+		Password: password{},
+	}
+	query := `SELECT id, username, password, email, rol, created_at, updated_at
+	FROM users
+	WHERE username = $1
+	`
+
+	err := pg.db.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password.hash,
+		&user.Email,
+		&user.Rol,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	//not found
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	// oops
+	if err != nil {
+		return nil, err
+	}
+	//we found the user
+	return &user, nil
+}
+
+func (pg *dbConn) UpdateUser(user *User) error {
+	query := `
+	UPDATE users
+	SET username = $1, password = $2, email = $3, updated_at = CURRENT_TIMESTAMP
+	WHERE id = $4
+	returning updated_at
+	`
+	result, err := pg.db.Exec(query,
+		user.Username,
+		user.Password.hash,
+		user.Email,
+		user.ID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
