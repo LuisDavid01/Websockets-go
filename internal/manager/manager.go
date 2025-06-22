@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"sync"
@@ -29,8 +30,9 @@ type Manager struct {
 	clients types.ClientList
 	sync.RWMutex
 
-	otps     auth.RetentionMap
-	handlers map[string]types.EventHandler
+	otps      auth.RetentionMap
+	handlers  map[string]types.EventHandler
+	templates *template.Template
 }
 
 // NewManager creates a new Manager.

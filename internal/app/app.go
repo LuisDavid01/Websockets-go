@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/LuisDavid01/Websockets-go/internal/manager"
 	"github.com/LuisDavid01/Websockets-go/internal/store"
+
 	"github.com/LuisDavid01/Websockets-go/migrations"
 )
 
@@ -37,7 +39,6 @@ func NewApplication() (*Application, error) {
 	if err != nil {
 		panic(err)
 	}
-
 	//we construct the application
 	app := &Application{
 		Logger:  logger,

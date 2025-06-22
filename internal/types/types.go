@@ -56,3 +56,22 @@ type NewMessageEvent struct {
 type ChangeRoomEvent struct {
 	Name string `json:"name"`
 }
+
+type FormData struct {
+	Values map[string]string
+	Errors map[string]string
+}
+
+func NewFormData() FormData {
+	return FormData{
+		Values: make(map[string]string),
+		Errors: make(map[string]string),
+	}
+}
+
+type Page struct {
+	Title  string
+	User   string
+	Form   FormData
+	Extras any // para cualquier otra cosa como contactos, historial, etc.
+}
