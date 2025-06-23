@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/LuisDavid01/Websockets-go/internal/api"
 	"github.com/LuisDavid01/Websockets-go/internal/manager"
 	"github.com/LuisDavid01/Websockets-go/internal/store"
 
@@ -19,12 +20,12 @@ type Application struct {
 	Logger  *log.Logger
 	DB      *sql.DB
 	Manager *manager.Manager
+	Users   *api.UserHandler
 }
 
 func NewApplication() (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	ctx := context.Background()
-	manager := manager.NewManager(ctx)
 	// our handler will go here
 
 	//Database conection
@@ -32,6 +33,9 @@ func NewApplication() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	userStore := store.NewDBConn(pgDb)
+	userHandler := api.NewUserHandler(userStore, logger)
+	manager := manager.NewManager(ctx, userStore)
 
 	//do migrations
 
@@ -44,6 +48,7 @@ func NewApplication() (*Application, error) {
 		Logger:  logger,
 		Manager: manager,
 		DB:      pgDb,
+		Users:   userHandler,
 	}
 	return app, nil
 }

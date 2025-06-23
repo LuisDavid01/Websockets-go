@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/LuisDavid01/Websockets-go/internal/store"
 	"github.com/LuisDavid01/Websockets-go/internal/types"
 	"github.com/gorilla/websocket"
 )
@@ -20,6 +21,7 @@ func NewClient(conn *websocket.Conn, manager types.Manager) *types.Client {
 		Connection: conn,
 		Manager:    manager,
 		Egress:     make(chan types.Event),
+		User:       store.AnonUser,
 	}
 }
 

@@ -44,7 +44,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Rol       string    `json:"-"`
-	Password  password  `json:"_"`
+	Password  password  `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -70,15 +70,17 @@ type IUser interface {
 	GetUserByUsername(username string) (*User, error)
 	GetUserById(id int64) (*User, error)
 	UpdateUser(user *User) error
-	GetUserToken(scope, tokenPlainText string) (*User, error)
+	//GetUserToken(scope, tokenPlainText string) (*User, error)
 }
 
 func (pg *dbConn) RegisterUser(user *User) error {
 	query := ` INSERT INTO 
 	users(username, email, rol, password)
 	VALUES($1,$2,$3,$4)
+	RETURNING id, created_at
 	`
-	err := pg.db.QueryRow(query, user.Username, user.Email, user.Rol, user.Password.hash).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	err := pg.db.QueryRow(query, user.Username, user.Email, "user", user.Password.hash).Scan(
+		&user.ID, &user.CreatedAt)
 
 	if err != nil {
 		return err
@@ -91,7 +93,7 @@ func (pg *dbConn) GetUserById(id int64) (*User, error) {
 	user := User{
 		Password: password{},
 	}
-	query := `SELECT id, username, password, email, "user", created_at, updated_at
+	query := `SELECT id, username, password, email, rol, created_at, updated_at
 	FROM users
 	WHERE id = $1
 	`

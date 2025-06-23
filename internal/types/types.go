@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/LuisDavid01/Websockets-go/internal/store"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,6 +23,7 @@ type Client struct {
 	Manager    Manager
 	Chatroom   string
 	Egress     chan Event
+	User       *store.User
 }
 
 // Event represents a WebSocket event.

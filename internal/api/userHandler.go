@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/LuisDavid01/Websockets-go/internal/store"
 	"github.com/LuisDavid01/Websockets-go/internal/utils"
@@ -78,5 +79,13 @@ func (h *UserHandler) HandlerRegisterUser(w http.ResponseWriter, r *http.Request
 		utils.WriteJson(w, http.StatusInternalServerError, utils.Envelope{"ERROR": err.Error()})
 		return
 	}
+	err = h.userStore.RegisterUser(user)
+
+	if err != nil {
+		h.logger.Printf("Error uploading the user: %v", err)
+		utils.WriteJson(w, http.StatusInternalServerError, utils.Envelope{"ERROR": err.Error()})
+		return
+	}
+	h.logger.Printf("User succesfuly created at: %v", time.Now())
 	utils.WriteJson(w, http.StatusCreated, utils.Envelope{"user": user})
 }

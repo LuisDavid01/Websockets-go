@@ -1,29 +1,49 @@
+# Ruta base del proyecto
 root = "."
+
+# Carpetas utilizadas para tests o temporales
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = []
-  bin = "tmp/main"
+  # Comando para compilar el binario
   cmd = "go build -o ./tmp/main.exe ."
+  bin = "tmp/main.exe"
+  args_bin = []
+
+  # Tiempo de espera para evitar múltiples builds por cambios rápidos
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata","database",".git"]
-  exclude_file = []
+
+  # Directorios que NO deben observarse
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "database", ".git"]
+
+  # Excluir archivos de test
   exclude_regex = ["_test.go"]
+
+  # Extensiones que sí deben observarse
+  include_ext = ["go", "tpl", "tmpl", "html"]
+
+  # Registro de errores de compilación
+  log = "build-errors.log"
+
+  # No se usa polling, solo eventos de sistema de archivos
+  poll = false
+  poll_interval = 0
+
+  # Tiempo de espera antes de reiniciar
+  kill_delay = "0s"
+  rerun = false
+  rerun_delay = 500
+
+  # Otros flags
+  exclude_file = []
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
   include_dir = []
-  include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []
-  kill_delay = "0s"
-  log = "build-errors.log"
-  poll = false
-  poll_interval = 0
   post_cmd = []
   pre_cmd = []
-  rerun = false
-  rerun_delay = 500
   send_interrupt = false
   stop_on_error = false
 
@@ -37,16 +57,14 @@ tmp_dir = "tmp"
 [log]
   main_only = false
   silent = false
-  time = false
+  time = true
 
 [misc]
-  clean_on_exit = false
+  clean_on_exit = true  # Limpia tmp al salir
 
 [proxy]
-  app_port = 0
   enabled = false
-  proxy_port = 0
 
 [screen]
-  clear_on_rebuild = false
+  clear_on_rebuild = true
   keep_scroll = true

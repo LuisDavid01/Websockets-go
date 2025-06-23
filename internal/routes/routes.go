@@ -16,12 +16,13 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	appIndex := NewAppRoutes(tmpl)
 
 	// Health check route
-	r.Get("/health", app.HealthCheck)
+	r.Get("/api/health", app.HealthCheck)
 	//route enableing ws
 	r.Get("/ws", app.Manager.ServeWS)
 
 	//auth
-	r.Post("/login", app.Manager.LoginHandler)
+	r.Post("/api/register", app.Users.HandlerRegisterUser)
+	r.Post("/api/login", app.Manager.LoginHandler)
 
 	//serve frontend
 	r.Get("/", appIndex.IndexHandler)

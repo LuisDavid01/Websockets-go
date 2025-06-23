@@ -13,6 +13,7 @@ import (
 
 	"github.com/LuisDavid01/Websockets-go/internal/auth"
 	"github.com/LuisDavid01/Websockets-go/internal/client"
+	"github.com/LuisDavid01/Websockets-go/internal/store"
 	"github.com/LuisDavid01/Websockets-go/internal/types"
 	"github.com/gorilla/websocket"
 )
@@ -33,14 +34,16 @@ type Manager struct {
 	otps      auth.RetentionMap
 	handlers  map[string]types.EventHandler
 	templates *template.Template
+	store     store.IUser
 }
 
 // NewManager creates a new Manager.
-func NewManager(ctx context.Context) *Manager {
+func NewManager(ctx context.Context, store store.IUser) *Manager {
 	m := &Manager{
 		clients:  make(types.ClientList),
 		handlers: make(map[string]types.EventHandler),
 		otps:     auth.NewRetentionMap(ctx, 5*time.Second),
+		store:    store,
 	}
 	m.setupEventHandlers()
 	return m
@@ -132,6 +135,7 @@ func (m *Manager) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 // LoginHandler handles user login and OTP generation.
 func (m *Manager) LoginHandler(w http.ResponseWriter, r *http.Request) {
+
 	type userLoginRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -142,25 +146,50 @@ func (m *Manager) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Username == "percy" && req.Password == "123" {
-		type response struct {
-			OTP string `json:"otp"`
-		}
-		otp := m.otps.NewOTP()
-		resp := response{
-			OTP: otp.Key,
-		}
-		data, err := json.Marshal(resp)
-		if err != nil {
-			log.Println("Failed to marshal OTP response:", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+	lookupUser, err := m.store.GetUserByUsername(req.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusUnauthorized)
+
+	if lookupUser == nil {
+		http.Error(w, "Missing user or password", http.StatusInternalServerError)
+		return
+
+	}
+
+	passwordDoMatch, err := lookupUser.Password.Matches(req.Password)
+
+	if err != nil {
+		http.Error(w, "error matching the password", http.StatusInternalServerError)
+		return
+
+	}
+	if !passwordDoMatch {
+		http.Error(w, "could not validate the user or password", http.StatusUnauthorized)
+		return
+
+	}
+
+	type response struct {
+		Username string `json:"username"`
+		OTP      string `json:"otp"`
+	}
+	otp := m.otps.NewOTP()
+	resp := response{
+		OTP:      otp.Key,
+		Username: req.Username,
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		log.Println("Failed to marshal OTP response:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
+
 }
 
 // addClient adds a client to the manager.

@@ -187,29 +187,34 @@
 			return false;
 
 		}
-		function login(){
-			let formData = {
-				"username": document.getElementById("username").value,
-				"password": document.getElementById("password").value,
-			}
+		function login() {
+	let formData = {
+		username: document.getElementById("username").value,
+		password: document.getElementById("password").value,
+	}
 
-			fetch("login", {
-				method: 'post',
-				body: JSON.stringify(formData),
-				mode:'cors'
-			}).then((response) => {
-					if (response.ok){
-						return response.json()
-					}else{
-						throw 'unauthorized'
-					}
-				}).then((data) => {
-					connectWebsocket(data.otp);
-				}).catch((e) => {alert(e)})
-			return false
+	fetch("/api/login", {
+		method: 'POST',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(formData),
+	})
+	.then((response) => {
+		if (response.ok) {
+			return response.json()
+		} else {
+			throw 'unauthorized'
 		}
-
-		function connectWebsocket(otp){
+	})
+	.then((data) => {
+		connectWebsocket(data.otp);
+	})
+	.catch((e) => {
+		alert(e)
+	})
+	return false
+}		function connectWebsocket(otp){
 			if(window["WebSocket"]){
 				console.log("connect to websocket")
 				conn = new WebSocket(`wss://${document.location.host}/ws?otp=${otp}`)
